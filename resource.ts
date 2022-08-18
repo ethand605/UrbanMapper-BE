@@ -727,17 +727,17 @@ const resp = {
   status: "OK",
 };
 
-//write the type for the resp object above
-type DirectionRespType = {
-    geocoded_waypoints : {
-        geocoder_status : string,
-        place_id : string,
-        types : string[]
-    }[],
-    routes : [],
-    status : string
-};
+// //write the type for the resp object above
+// type DirectionRespType = {
+//     geocoded_waypoints : {
+//         geocoder_status : string,
+//         place_id : string,
+//         types : string[]
+//     }[],
+//     routes : [],
+//     status : string
+// };
  
 const baseURL = "https://maps.googleapis.com/maps/api/directions/json?key=AIzaSyDFS42jSQ0cUhB_eVCUy1nCTlmegGq14Hw&";
 
-export {baseURL, resp, DirectionRespType};
+export {baseURL, resp};

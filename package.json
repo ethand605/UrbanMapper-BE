@@ -2,13 +2,13 @@
   "name": "urbantransit-be",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "tsc": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev index.ts",
+    "dev": "ts-node-dev app.ts",
     "lint": "eslint --ext .ts .",
-    "start": "node build/index.js"
+    "start": "node build/app.js"
   },
   "author": "",
   "license": "ISC",
@@ -22,7 +22,10 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
+    "@googlemaps/google-maps-services-js": "^3.3.16",
     "axios": "^0.27.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
     "express": "^4.18.1"
   }
 }
