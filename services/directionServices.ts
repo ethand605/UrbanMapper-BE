@@ -83,6 +83,8 @@ async function convertToMultimodalDirection(defaultDirection: DirectionsResponse
         departure_time: 0,
         arrival_time: 0,
     };
+    //edge case, what if the map tells you to drive to the bus stop
+    //also don't rule out the ones that are possible if bike instead of walking
     for (const step of defaultDirection.routes[0].legs[0].steps) {
         if (step.travel_mode.valueOf().toLocaleLowerCase()===TravelMode.walking){
             const bicyclingDirection: DirectionsResponseData = await getBicyclingDirection(step.start_location, step.end_location);
