@@ -8,9 +8,12 @@ import {
     TravelMode,
     DirectionsResponseData
 } from "@googlemaps/google-maps-services-js";
+import {GOOGLE_MAPS_API_KEY} from "../utils/config";
+import {Distance, Duration, TransitDetails} from "@googlemaps/google-maps-services-js/src/common";
 const client = new Client({});
 
-
+//TODO: use await/async for all functions
+//TODO: add alternative routes
 async function getDefaultTransitDirection(originAddress: string, destinationAddress:string): Promise<DirectionsResponseData> {
     // let origin = await client.geocode({params: {address: originAddress, key=process.env.GOOGLE_API_KEY}})}});
     const origin: LatLng = await geocode(originAddress);
@@ -20,18 +23,24 @@ async function getDefaultTransitDirection(originAddress: string, destinationAddr
                 origin,
                 destination,
                 mode: TravelMode.transit,
-                key: process.env.GOOGLE_MAPS_API_KEY,
+                key: GOOGLE_MAPS_API_KEY,
             }
     });
     return defaultTransitDirection.data;
 }
 
-function geocode(address: string){
-    return client.geocode({params: {address: address, key:process.env.GOOGLE_MAPS_API_KEY}})
+function geocode(address: string): Promise<string>{
+    return client.geocode({params: {address: address, key:GOOGLE_MAPS_API_KEY}})
         .then((resp: GeocodeResponse)  => resp.data)
         .then((data: GeocodeResponseData) => data.results[0].geometry.location)
         .then((location: LatLngLiteral) => `${location.lat},${location.lng}`);
 }
+
+// function reverseGeocode(latlng: LatLngLiteral): Promise<string>{
+//     return client.reverseGeocode({params: {latlng: latlng, key: GOOGLE_MAPS_API_KEY}})
+//         .then((resp: GeocodeResponse) => resp.data)
+//         .then((data: GeocodeResponseData) => data.results[1].formatted_address);
+// }
 
 async function getBicyclingDirection(legOrigin: LatLngLiteral, legDestination: LatLngLiteral) :Promise<DirectionsResponseData> {//, arrivalTime: Date) {
     //what you need here: distance, duration, start_location, end_location, polyline. as for the start and end time, end time would be start time of bus. start time is end time minus duration.
@@ -40,18 +49,35 @@ async function getBicyclingDirection(legOrigin: LatLngLiteral, legDestination: L
             origin: legOrigin,
             destination: legDestination,
             mode: TravelMode.bicycling,
-            key: process.env.GOOGLE_MAPS_API_KEY,
+            key: GOOGLE_MAPS_API_KEY,
         }
     });
     return bicyclingDirection.data;
 }
 
+type multimodalDirection = {
+    steps: step[];
+    duration: number;
+    departure_time: number | string | Date;
+    arrival_time: number | string | Date;
+};
+
+type step = {
+    distance: Distance;
+    duration: Duration;
+    polyline: string;
+    start_location: LatLngLiteral;
+    end_location: LatLngLiteral;
+    travel_mode: TravelMode;
+    transit_details?: TransitDetails
+};
+
 /**
  * converts the default transit direction into a bicycling direction, changing the legs and duration of the default transit direction.
  * @param defaultDirection
  */
-async function convertToMultimodalDirection(defaultDirection: DirectionsResponseData) {
-    const finalDirection = {
+async function convertToMultimodalDirection(defaultDirection: DirectionsResponseData): Promise<multimodalDirection> {
+    const finalDirection: multimodalDirection = {
         steps: [],
         duration: 0, //TODO: clean this up
         departure_time: 0,
@@ -61,9 +87,10 @@ async function convertToMultimodalDirection(defaultDirection: DirectionsResponse
         if (step.travel_mode.valueOf().toLocaleLowerCase()===TravelMode.walking){
             const bicyclingDirection: DirectionsResponseData = await getBicyclingDirection(step.start_location, step.end_location);
             finalDirection.steps.push({
+                //TODO: define the type for this object
                 distance: bicyclingDirection.routes[0].legs[0].distance,
                 duration: bicyclingDirection.routes[0].legs[0].duration,
-                polyline: bicyclingDirection.routes[0].overview_polyline,
+                polyline: bicyclingDirection.routes[0].overview_polyline.points,
                 start_location: step.start_location,
                 end_location: step.end_location,
                 travel_mode: TravelMode.bicycling,
@@ -72,7 +99,7 @@ async function convertToMultimodalDirection(defaultDirection: DirectionsResponse
             finalDirection.steps.push({
                 distance: step.distance,
                 duration: step.duration,
-                polyline: step.polyline,
+                polyline: step.polyline.points,
                 start_location: step.start_location,
                 end_location: step.end_location,
                 travel_mode: step.travel_mode,
@@ -81,14 +108,23 @@ async function convertToMultimodalDirection(defaultDirection: DirectionsResponse
         }
     }
     //calculate duration
-    finalDirection.duration = <number>finalDirection.steps.reduce((previousValue:number, step) => previousValue + <number>step.duration.value, 0);
+    finalDirection.duration = finalDirection.steps.reduce((previousValue:number, step) => previousValue + step.duration.value, 0);
+    //departure time depends on the travel mode of the first leg
+    //TODO: put all the date time stuff in util helper
     if (finalDirection.steps[0].travel_mode===TravelMode.bicycling){
-        finalDirection.departure_time = <number>finalDirection.steps[1].transit_details.departure_time.value-finalDirection.steps[0].duration.value;
+        finalDirection.departure_time = finalDirection.steps[1].transit_details.departure_time.value.valueOf()-finalDirection.steps[0].duration.value;
     }else{
-        finalDirection.departure_time = <number>finalDirection.steps[0].transit_details.departure_time.value;
+        finalDirection.departure_time = finalDirection.steps[0].transit_details.departure_time.value.valueOf();
     }
     finalDirection.arrival_time = finalDirection.departure_time + finalDirection.duration;
+    finalDirection.duration /= 60; //convert to minutes
+    finalDirection.arrival_time = new Date(finalDirection.arrival_time* 1000).toLocaleString('en-US', {timeZone: 'America/Los_Angeles',}).split(", ")[1];
+    finalDirection.departure_time = new Date(finalDirection.departure_time* 1000).toLocaleString('en-US', {timeZone: 'America/Los_Angeles',}).split(", ")[1];
     return finalDirection;
 }
 
-export {getDefaultTransitDirection, convertToMultimodalDirection};
+async function getMultiModalDirection(originAddress: string, destinationAddress: string) {
+    return await convertToMultimodalDirection(await getDefaultTransitDirection(originAddress, destinationAddress));
+}
+
+export {getDefaultTransitDirection, convertToMultimodalDirection, getMultiModalDirection};
