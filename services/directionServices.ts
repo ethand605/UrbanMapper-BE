@@ -107,6 +107,7 @@ async function convertToMultimodalDirection(defaultDirection: DirectionsResponse
             });
         }
     }
+    //TODO: clean up the results so the FE only gets the necessary information
     //calculate duration
     finalDirection.duration = finalDirection.steps.reduce((previousValue:number, step) => previousValue + step.duration.value, 0);
     //departure time depends on the travel mode of the first leg
