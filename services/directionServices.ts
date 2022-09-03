@@ -1,8 +1,6 @@
 import {
     Client,
     DirectionsResponse,
-    GeocodeResponse,
-    GeocodeResponseData,
     LatLng,
     LatLngLiteral,
     TravelMode,
@@ -10,12 +8,12 @@ import {
 } from "@googlemaps/google-maps-services-js";
 import {GOOGLE_MAPS_API_KEY} from "../utils/config";
 import {Distance, Duration, TransitDetails} from "@googlemaps/google-maps-services-js/src/common";
-const client = new Client({});
 
+const client = new Client({});
+//TODO: to consider routes that can be done if biked instead of walked, get all the available bus station. set that to the origin, and use that origin to set the first leg of the trip using leg
 //TODO: use await/async for all functions
 //TODO: add alternative routes
 async function getDefaultTransitDirection(originAddress: string, destinationAddress:string): Promise<DirectionsResponseData> {
-    // let origin = await client.geocode({params: {address: originAddress, key=process.env.GOOGLE_API_KEY}})}});
     const origin: LatLng = await geocode(originAddress);
     const destination: LatLng = await geocode(destinationAddress);
     const defaultTransitDirection: DirectionsResponse = await client.directions({
@@ -29,11 +27,10 @@ async function getDefaultTransitDirection(originAddress: string, destinationAddr
     return defaultTransitDirection.data;
 }
 
-function geocode(address: string): Promise<string>{
-    return client.geocode({params: {address: address, key:GOOGLE_MAPS_API_KEY}})
-        .then((resp: GeocodeResponse)  => resp.data)
-        .then((data: GeocodeResponseData) => data.results[0].geometry.location)
-        .then((location: LatLngLiteral) => `${location.lat},${location.lng}`);
+async function geocode(address: string): Promise<string>{
+    const resp =  await client.geocode({params: {address: address, key:GOOGLE_MAPS_API_KEY}});
+    const location = resp.data.results[0].geometry.location;
+    return `${location.lat},${location.lng}`;
 }
 
 // function reverseGeocode(latlng: LatLngLiteral): Promise<string>{
@@ -83,7 +80,7 @@ async function convertToMultimodalDirection(defaultDirection: DirectionsResponse
         departure_time: 0,
         arrival_time: 0,
     };
-    //edge case, what if the map tells you to drive to the bus stop
+    //TODO: edge case, what if the map tells you to drive to the bus stop
     //also don't rule out the ones that are possible if bike instead of walking
     for (const step of defaultDirection.routes[0].legs[0].steps) {
         if (step.travel_mode.valueOf().toLocaleLowerCase()===TravelMode.walking){
@@ -120,9 +117,17 @@ async function convertToMultimodalDirection(defaultDirection: DirectionsResponse
         finalDirection.departure_time = finalDirection.steps[0].transit_details.departure_time.value.valueOf();
     }
     finalDirection.arrival_time = finalDirection.departure_time + finalDirection.duration;
-    finalDirection.duration /= 60; //convert to minutes
-    finalDirection.arrival_time = new Date(finalDirection.arrival_time* 1000).toLocaleString('en-US', {timeZone: 'America/Los_Angeles',}).split(", ")[1];
-    finalDirection.departure_time = new Date(finalDirection.departure_time* 1000).toLocaleString('en-US', {timeZone: 'America/Los_Angeles',}).split(", ")[1];
+    finalDirection.duration = Math.round(finalDirection.duration/60); //convert to minutes
+
+    const dateStringOptions = {
+        hour: '2-digit',
+        minute:'2-digit',
+        timeZone: 'America/Los_Angeles'
+    };
+
+    finalDirection.arrival_time = new Date(finalDirection.arrival_time* 1000).toLocaleTimeString('en-US', dateStringOptions as Intl.DateTimeFormatOptions);
+    finalDirection.departure_time = new Date(finalDirection.departure_time* 1000).toLocaleTimeString("en-US", dateStringOptions as Intl.DateTimeFormatOptions);
+    console.log(finalDirection.departure_time);
     return finalDirection;
 }
 

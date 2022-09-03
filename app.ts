@@ -1,4 +1,4 @@
-import express from "express";
+import express, {RequestHandler} from "express";
 import cors from "cors";
 import {getMultiModalDirection} from "./services/directionServices";
 import {PORT} from "./utils/config";
@@ -18,17 +18,14 @@ app.use(cors<Request>());
 // };
 
 
-app.get("/direction", (req, res) => {
-    //TODO turn this into async await?
-    console.log(req.query);
-    getMultiModalDirection("Alton Pkwy 5051", "Donald Bren Hall, Irvine, CA")
-        .then((finalDirection) => {console.log(finalDirection); res.send(finalDirection);} )
-        .catch((err) => {console.log(err); res.send(err);} );
-});
+app.get("/direction", (async (req, res) => {
+    const finalDirection = await getMultiModalDirection(<string>req.query["Origin"], <string>req.query["Destination"]);
+    return res.send(finalDirection);
+}) as RequestHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   // testDirection()
   //     .then(() => console.log("done"))
   //     .catch(err => console.log(err));
-}); 
+});
