@@ -1,8 +1,10 @@
-type multimodalDirection = {
+import {Distance, Duration, TransitDetails} from "@googlemaps/google-maps-services-js/src/common";
+import {LatLngLiteral, TravelMode} from "@googlemaps/google-maps-services-js";
+
+export type multimodalDirection = {
     steps: step[];
     duration: Duration;
-    // departure_time: number | string | Date;
-    // arrival_time: number | string | Date;
+    biking_distance: Distance;
     departure_time: Duration;
     arrival_time: Duration;
 };

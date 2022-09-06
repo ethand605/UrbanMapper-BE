@@ -7,7 +7,7 @@ import {
     DirectionsResponseData
 } from "@googlemaps/google-maps-services-js";
 import {GOOGLE_MAPS_API_KEY} from "../utils/config";
-import {multimodalDirection, step} from "../types/direction";
+import {multimodalDirection, step} from "../types/customDirections";
 import {geocode, reverseGeocode} from "../utils/geocodeHelper";
 import secondsToDatePST from "../utils/dateHelper";
 
@@ -32,8 +32,6 @@ async function getDefaultTransitDirection(originAddress: string, destinationAddr
     return defaultTransitDirection.data;
 }
 
-
-
 async function getBicyclingDirection(legOrigin: LatLngLiteral, legDestination: LatLngLiteral) :Promise<DirectionsResponseData> {
     //what you need here: distance, duration, start_location, end_location, polyline. as for the start and end time, end time would be start time of bus. start time is end time minus duration.
     const bicyclingDirection: DirectionsResponse = await client.directions({
@@ -54,6 +52,10 @@ async function convertToMultimodalDirection(defaultDirection: DirectionsResponse
     const finalDirection: multimodalDirection = {
         steps: [],
         duration: {
+            text: "",
+            value: 0
+        },
+        biking_distance: {
             text: "",
             value: 0
         },
@@ -121,6 +123,15 @@ async function convertToMultimodalDirection(defaultDirection: DirectionsResponse
     finalDirection.arrival_time.text = secondsToDatePST(finalDirection.arrival_time.value);
     finalDirection.departure_time.text = secondsToDatePST(finalDirection.departure_time.value);
 
+    //calculate the distance
+    finalDirection.biking_distance.value = finalDirection.steps.reduce((previousValue, step) => {
+        if (step.travel_mode===TravelMode.bicycling) {
+            return previousValue + step.distance.value;
+        }else {
+            return previousValue;
+        }
+    }, 0);
+    finalDirection.biking_distance.text = Math.round(finalDirection.biking_distance.value/1000).toString()+" km"; //convert to km
     return finalDirection;
 }
 
