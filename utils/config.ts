@@ -1,8 +1,6 @@
 import "dotenv/config";
 
-const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
-const PORT = process.env.PORT;
-export {
-    GOOGLE_MAPS_API_KEY,
-    PORT
-};
+export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+export const PORT = process.env.PORT;
+export const MONGODB_URI = process.env.MONGODB_URI;
+export const SESSION_SECRET = process.env.SESSION_SECRET;
