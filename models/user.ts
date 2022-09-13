@@ -3,7 +3,9 @@ import { Schema, model, Document  } from 'mongoose';
 export interface User extends Document{
     username: string,
     password: string,
-    addresses? : string[]
+    addresses? : {
+        address: string
+    }[]
 }
 
 const userSchema = new Schema<User>({

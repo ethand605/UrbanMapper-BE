@@ -79,6 +79,7 @@ async function convertToMultimodalDirection(defaultDirection: DirectionsResponse
         //change the waking/driving step into biking
         const stepTravelMode: string = step.travel_mode.valueOf().toLocaleLowerCase();
         if (stepTravelMode===TravelMode.walking || stepTravelMode===TravelMode.driving) {
+            //TODO: fix the last bike path
             const bicyclingDirections: DirectionsResponseData = await getBicyclingDirection(step.start_location, step.end_location);
             const bicyclingLeg = bicyclingDirections.routes[0].legs[0];
             newStep = {
