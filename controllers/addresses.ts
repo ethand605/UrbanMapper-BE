@@ -1,0 +1,36 @@
+import express, {RequestHandler} from "express";
+const addressRouter = express.Router();
+
+//req.user is set by the userExtractor middleware
+addressRouter.get('/currentUser', (req, res) => {
+    console.log("current user", req.user);
+    res.send(req.user);
+});
+
+addressRouter.get('/', (req, res) => {
+    return res.send(req.user.addresses);
+});
+
+addressRouter.post('/', ( async (req, res) => {
+    req.user.addresses.push(<string>req.body.address);
+    const savedUser = await req.user.save();
+    res.send(savedUser.addresses);
+}) as RequestHandler);
+
+addressRouter.delete('/', ( async (req, res) => {
+    req.user.addresses = req.user.addresses.filter((address) => address !== req.body.address);
+    const savedUser = await req.user.save();
+    res.send(savedUser.addresses);
+}) as RequestHandler);
+
+addressRouter.put('/', ( async (req, res) => {
+    const newAddress: string = <string>req.body.newAddress;
+    const oldAddress: string = <string>req.body.oldAddress;
+    
+    req.user.addresses = req.user.addresses.map((address) => address === oldAddress ? newAddress : address);
+    const savedUser = await req.user.save();
+    res.send(savedUser.addresses);
+}) as RequestHandler);
+
+
+export default addressRouter;

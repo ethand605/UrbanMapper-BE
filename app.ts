@@ -4,8 +4,10 @@ import {PORT, MONGODB_URI, SESSION_SECRET} from "./utils/config";
 import mongoose from "mongoose";
 import session from 'express-session';
 import MongoStore from "connect-mongo";
-import directionRouter from "./routes/directionRoutes";
-import authRouter from "./routes/authRoutes";
+import directionRouter from "./controllers/directions";
+import authRouter from "./controllers/auth";
+import userExtractor from "./utils/middlewares";
+import addressRouter from "./controllers/addresses";
 const app = express();
 
 mongoose.connect(MONGODB_URI)
@@ -20,7 +22,6 @@ app.use(express.json());
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 app.use(cors());
-
 
 app.use(session({
     secret: SESSION_SECRET,
@@ -40,6 +41,7 @@ app.use(session({
 
 app.use('/direction', directionRouter);
 app.use('/auth', authRouter);
+app.use('/addresses', userExtractor, addressRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
