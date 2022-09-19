@@ -21,8 +21,9 @@ const userSchema = new Schema<User>({
     },
     addresses: [
         {
-            address: String
-            //note for address and abstract address into another model?
+            address: String,
+			// unique: true
+            //add note field for address and abstract address into another model?
         }
     ]
 }, 

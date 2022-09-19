@@ -21,7 +21,11 @@ mongoose.connect(MONGODB_URI)
 app.use(express.json());
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-app.use(cors());
+app.use(cors({
+    origin: true,
+    credentials: true,
+    optionsSuccessStatus: 200
+}));
 
 app.use(session({
     secret: SESSION_SECRET,
@@ -32,10 +36,12 @@ app.use(session({
         client: mongoose.connection.getClient(),
         mongoUrl: MONGODB_URI,
         collectionName: 'sessions',
-        ttl: 60 * 60 * 24 * 7, //one week,
+        ttl: 60 * 60 * 24 * 7, //one week, TODO: add these in env
     }),
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 7 //one week
+        sameSite: false,
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 * 7 //TODO: add these in env, one week
     }
 }));
 
