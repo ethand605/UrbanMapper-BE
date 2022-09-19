@@ -7,7 +7,7 @@ import {
     DirectionsResponseData
 } from "@googlemaps/google-maps-services-js";
 import {GOOGLE_MAPS_API_KEY} from "../utils/config";
-import {multimodalDirection, step} from "../types/customDirections";
+import {multimodalDirection, step} from "../types/directions";
 import {geocode, reverseGeocode} from "../utils/geocodeHelper";
 import secondsToDatePST from "../utils/dateHelper";
 

@@ -79,7 +79,7 @@ authRouter.delete("/logout",  (req, resp) => {
 });
 
 //for testing purposes, delete later
-authRouter.get("/isAuth", (req, resp) => {
+authRouter.get("/login", (req, resp) => {
     resp.json(req.session.user);
 });
 
