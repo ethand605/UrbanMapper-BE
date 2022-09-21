@@ -80,7 +80,7 @@ authRouter.delete("/logout",  (req, resp) => {
         if (err) {
             resp.status(400).json({ msg: 'Error logging out' });
         } else {
-            resp.status(200).json({ msg: 'Logged out successfully' });
+            resp.status(200).json({ isLoggedIn: false });
         }
     });
 });
