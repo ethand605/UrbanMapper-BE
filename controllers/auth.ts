@@ -30,7 +30,7 @@ authRouter.post("/signup", (async (req, resp) => {
         });
         
         const savedUser = await user.save();
-        
+        req.session.user = username;
         resp.status(201).json(savedUser);
 
     }catch(err){
@@ -39,6 +39,14 @@ authRouter.post("/signup", (async (req, resp) => {
     }
 
 }) as RequestHandler);
+
+authRouter.get("/login", (req, resp) => {
+    if (req.session.user){
+        resp.json({isLoggedIn: true, user:req.session.user});
+    }else{
+        resp.json({ isLoggedIn: false});
+    }
+});
 
 authRouter.post("/login", (async (req, resp) => {
     const username: string = <string>req.body.username;
@@ -56,10 +64,9 @@ authRouter.post("/login", (async (req, resp) => {
 
     const matchPassword = await bcrypt.compare(password, user.password);
     if (matchPassword) {
-        const userSession = {username: user.username}; 
-        req.session.user = userSession; 
+        req.session.user = user.username; 
 
-        resp.status(200).json({ msg: 'Logged in successfully', userSession });
+        resp.status(200).json({ isLoggedIn: true, user:user.username });
         return;
     } else {
         resp.status(400).json({ msg: 'Invalid credential' });
@@ -78,10 +85,7 @@ authRouter.delete("/logout",  (req, resp) => {
     });
 });
 
-//for testing purposes, delete later
-authRouter.get("/login", (req, resp) => {
-    resp.json(req.session.user);
-});
+
 
 
 export default authRouter;

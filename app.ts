@@ -22,7 +22,7 @@ app.use(express.json());
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 app.use(cors({
-    origin: true,
+    origin: "http://localhost:3000",
     credentials: true,
     optionsSuccessStatus: 200
 }));
@@ -39,7 +39,7 @@ app.use(session({
         ttl: 60 * 60 * 24 * 7, //one week, TODO: add these in env
     }),
     cookie: {
-        sameSite: false,
+        // sameSite: 'none',
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24 * 7 //TODO: add these in env, one week
     }
