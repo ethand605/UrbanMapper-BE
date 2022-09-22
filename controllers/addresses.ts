@@ -1,12 +1,6 @@
 import express, {RequestHandler} from "express";
 const addressRouter = express.Router();
 
-//for testing purposes, delete later
-addressRouter.get('/currentUser', (req, res) => {
-    console.log("current user", req.user);
-    res.send(req.user);
-});
-
 //req.user is set by the userExtractor middleware
 addressRouter.get('/', (req, res) => {
     return res.send(req.user.addresses);
@@ -14,10 +8,7 @@ addressRouter.get('/', (req, res) => {
 
 addressRouter.post('/', ( async (req, res) => {
     //check if address already exists
-    console.log(<string>req.body.address);
-    console.log(req.user.addresses);
     req.user.addresses.push({address: <string>req.body.address});
-    console.log("updated user", req.user);
     const savedUser = await req.user.save();
     res.send(savedUser.addresses);
 }) as RequestHandler);
